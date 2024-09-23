@@ -1,5 +1,5 @@
-from typing import Optional
-from fastapi import FastAPI, Query, Request
+from typing import Optional, Union
+from fastapi import FastAPI, Query, Request, status
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel, Field
@@ -192,3 +192,32 @@ async def read_user(page: int = 1, size: int = 10, sort_by: str = "name"):
     """
 
     return {"page": page, "size": size, "sort_by": sort_by}
+
+
+class Item(BaseModel):
+    name: str
+    price: float
+    description: str = None
+    tax: float = None
+
+
+class Message(BaseModel):
+    message: str
+
+
+# @app.get("/items/{item_id}", response_model=Item)
+# async def read_item(item_id: int):
+#     return {"name": "Foo", "price": 45.2, "is_offer": True}
+
+
+@app.post("/items", response_model=Item, status_code=status.HTTP_201_CREATED)
+async def create_item(item: Item):
+    return item
+
+
+@app.get("/items/{item_id}", response_model=Union[Item, Message])
+async def read_item(item_id: int):
+    if item_id == 1:
+        return {"name": "Foo", "price": 45.2}
+    else:
+        return {"message": "Item not found"}
